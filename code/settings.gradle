@@ -1,0 +1,3 @@
+rootProject.name = 'load-test'
+
+include 'business'

@@ -1,0 +1,33 @@
+// Top-level build file where you can add configuration options common to all sub-projects/modules.
+
+def javaProjects = []
+
+javaProjects << 'business'
+
+project(javaProjects) {
+    apply plugin: 'java'
+
+    sourceCompatibility = JavaVersion.VERSION_1_8
+}
+
+project(javaProjects) {
+    group = 'gq.baijie.loadtest'
+    version = '0.1.0'
+
+    repositories {
+        jcenter()
+    }
+
+    dependencies {
+        compile 'com.google.code.findbugs:jsr305:3.0.1'
+        compile 'io.reactivex:rxjava:1.1.10'
+        // test
+        testCompile 'junit:junit:4.12'
+    }
+}
+
+
+
+Iterable project(Iterable<String> projects, Closure configureClosure) {
+    projects.collect {project(it, configureClosure)}
+}
