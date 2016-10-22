@@ -1,0 +1,10 @@
+plugins {
+  id 'application'
+}
+
+mainClassName = "${group}.business.Main"
+
+dependencies {
+  compile 'io.vertx:vertx-core:3.3.3'
+  compile 'org.apache.commons:commons-lang3:3.4'
+}
