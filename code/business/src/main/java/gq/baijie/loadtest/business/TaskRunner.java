@@ -33,8 +33,12 @@ public class TaskRunner {
     this.taskFactory = taskFactory;
   }
 
-  public Observable<Long> getFinishedTaskNumber() {
+  public Observable<Long> getFinishedTaskNumberObservable() {
     return finishedTaskNumber.asObservable();
+  }
+
+  public long getFinishedTaskNumber() {
+    return finishedTaskNumber.getValue();
   }
 
   void start() {
@@ -52,7 +56,7 @@ public class TaskRunner {
           stopWatch.stop();
           System.out.println("all test run in: " + stopWatch);
           double tsPerS = (double) (configuration.getTaskTotalNumber() * 1000) / stopWatch.getTime();
-          System.out.println("tasks/s: " + tsPerS);
+          System.out.println(tsPerS + " tasks/s averagely");
 
           taskFactory.destory();
         }));

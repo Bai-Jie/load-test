@@ -1,6 +1,12 @@
 package gq.baijie.loadtest.business;
 
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
+
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+
+import rx.Observable;
 
 public class Main {
 
@@ -14,16 +20,23 @@ public class Main {
     CountDownLatch latch = new CountDownLatch(1);
 
     final TaskRunner taskRunner = new TaskRunner(configuration, taskFactory);
-    taskRunner.getFinishedTaskNumber()
-        .map(finishedNum -> finishedNum / (16*1024))
-        .distinctUntilChanged()
-        .subscribe(finishedNum->System.out.println(finishedNum*16+" K"));
-    taskRunner.getFinishedTaskNumber()
-        .map(finished->finished>=configuration.getTaskTotalNumber())
-        .filter(finished->finished)
+
+    final Observable<Boolean> finishedObservable = taskRunner.getFinishedTaskNumberObservable()
+        .map(finished -> finished >= configuration.getTaskTotalNumber())
+        .filter(finished -> finished)
         .first()
-        .toSingle()
-        .subscribe(finished->latch.countDown());
+        .publish()
+        .refCount();
+    Observable.interval(0, 1, TimeUnit.SECONDS)
+        .takeUntil(finishedObservable.delay(1, TimeUnit.SECONDS))
+        .map(counter->taskRunner.getFinishedTaskNumber())
+        .scan(Pair.of(0L, 0L), (previous, current) -> Pair.of(previous.getRight(), current))
+        .map(pairWithPrevious->pairWithPrevious.getRight() - pairWithPrevious.getLeft())
+        .subscribe(finishedPerSecond->{
+          System.out.print(StringUtils.repeat(' ', (int) (finishedPerSecond / 250)) + "| ");
+          System.out.println(finishedPerSecond + " tasks/s");
+        }, Throwable::printStackTrace, latch::countDown);
+
     taskRunner.start();
 
     try {
